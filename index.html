@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>赢赢赢</title>
+
+<!-- PWA / Apple 桌面图标配置 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="赢赢赢">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+<meta name="theme-color" content="#dd5879">
+<meta name="apple-touch-icon" content="/icon-180.png">
+<link rel="manifest" href="/manifest.json">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui, -apple-system, sans-serif;}
+body{display:flex;background:#fff8f5;height:100vh;overflow:hidden;}
+
+/* 左侧侧边导航 蜜桃奶油侧边栏 */
+.sidebar{
+    width:240px;
+    background:linear-gradient(180deg,#ffd6e0,#ffb6c1);
+    color:#633942;
+    padding:30px 0;
+    flex-shrink:0;
+    border-radius:0 22px 22px 0;
+    box-shadow:3px 0 10px rgba(230, 160, 180, 0.25);
+}
+.sidebar-title{
+    text-align:center;
+    font-size:21px;
+    font-weight:bold;
+    margin-bottom:35px;
+    color:#ffffff;
+    text-shadow:1px 1px 3px rgba(160,80,100,0.2);
+}
+.menu-item{
+    padding:14px 28px;
+    font-size:16px;
+    cursor:pointer;
+    transition:0.24s;
+    border-radius:0 18px 18px 0;
+    margin-right:10px;
+}
+.menu-item:hover{background:rgba(255,255,255,0.4)}
+.menu-item.active{
+    background:#ffffff;
+    color:#dd5879;
+    font-weight:bold;
+    box-shadow:0 3px 9px rgba(221, 88, 121, 0.15);
+}
+
+/* 主内容区域 */
+.main-wrap{
+    flex:1;
+    overflow:auto;
+    padding:24px;
+}
+.page{display:none;max-width:1120px;margin:0 auto}
+.page.active{display:block}
+h2{margin-bottom:22px;color:#633942;font-weight:600}
+.card{
+    background:#ffffff;
+    border-radius:20px;
+    padding:22px;
+    box-shadow:0 3px 12px rgba(220, 180, 190, 0.12);
+    margin-bottom:18px;
+    border:1px solid #ffe7ed;
+}
+.card h3{color:#774953;margin-bottom:14px;font-size:17px}
+
+input,select{
+    padding:11px 12px;
+    width:220px;
+    border:1px solid #ffd2dc;
+    border-radius:14px;
+    margin:6px;
+    font-size:14px;
+    background:#fff9fa;
+    color:#55333b;
+    outline:none;
+    transition:0.2s;
+}
+input:focus,select:focus{
+    border-color:#ff9bb0;
+}
+button{
+    padding:10px 16px;
+    border:none;
+    border-radius:14px;
+    cursor:pointer;
+    margin:4px;
+    font-size:14px;
+    transition:0.2s;
+}
+button:hover{
+    transform:translateY(-2px);
+    opacity:0.92;
+}
+.btn-red{background:linear-gradient(135deg,#ff7894,#ff8da1);color:#fff}
+.btn-green{background:linear-gradient(135deg,#7be2b2,#6cd3b8);color:#fff}
+.btn-blue{background:linear-gradient(135deg,#79bfff,#93d6ff);color:#fff}
+.btn-gray{background:#e9e3e6;color:#60444c}
+
+/* 日历样式 */
+.calendar-box{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:8px;
+    margin:16px 0;
+}
+.calendar-day{
+    aspect-ratio:1/1;
+    border-radius:16px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    border:1px solid #ffe7ed;
+    font-size:14px;
+    background:#fff9fa;
+    color:#633942;
+}
+.day-win{
+    background:linear-gradient(135deg,#ffc8d2,#ffdde7);
+    color:#b83c5c;
+    font-weight:bold;
+}
+.day-lose{
+    background:linear-gradient(135deg,#c6f6e0,#d4f4ec);
+    color:#22875c;
+    font-weight:bold;
+}
+.day-empty{background:#fff}
+
+.stat-row{display:flex;gap:30px;margin:12px 0;flex-wrap:wrap}
+.win-text{color:#dd5879;font-weight:bold;font-size:18px}
+.lose-text{color:#279e68;font-weight:bold;font-size:18px}
+.balance-text{font-weight:bold;font-size:18px;color:#633942}
+
+table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    margin-top:12px;
+    border-radius:16px;
+    overflow:hidden;
+}
+th,td{
+    border-bottom:1px solid #ffe7ed;
+    padding:11px;
+    text-align:center;
+    font-size:14px;
+    color:#633942;
+}
+th{background:#fff0f4;color:#774953;font-weight:600}
+
+@media(max-width:768px){
+    body{flex-direction:column;height:auto;overflow:auto}
+    .sidebar{width:100%;border-radius:0 0 22px 22px}
+    .calendar-box{grid-template-columns:repeat(7,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- 侧边菜单 -->
+<div class="sidebar">
+    <div class="sidebar-title">🏆赢赢赢工作台</div>
+    <div class="menu-item active" data-page="page1">🙋🏻‍♂️赢钱</div>
+    <div class="menu-item" data-page="page2">🙋🏼‍♀️赢钱</div>
+    <div class="menu-item" data-page="page3">💰存钱计划</div>
+</div>
+
+<!-- 主体内容 -->
+<div class="main-wrap">
+    <!-- 页面1：男士 🙋🏻‍♂️赢钱 -->
+    <div class="page active" id="page1">
+        <h2>🙋🏻‍♂️ 月度输赢记账</h2>
+        <div class="card">
+            <h3>新增当日记录</h3>
+            <input type="date" id="m1-date">
+            <br>
+            <input type="number" placeholder="金额" id="m1-money">
+            <br>
+            <button class="btn-red" onclick="addRecord('man','win')">✅记赢</button>
+            <button class="btn-green" onclick="addRecord('man','lose')">❌记输</button>
+            <button class="btn-gray" onclick="clearMonthData('man')">清空本月数据</button>
+        </div>
+        <div class="card">
+            <h3>当月日历</h3>
+            <div id="calendar-man" class="calendar-box"></div>
+        </div>
+        <div class="card">
+            <h3>月度统计汇总</h3>
+            <div class="stat-row">
+                <div>总盈利：<span class="win-text" id="man-total-win">0.00</span></div>
+                <div>总亏损：<span class="lose-text" id="man-total-lose">0.00</span></div>
+                <div>本月净盈亏：<span class="balance-text" id="man-balance">0.00</span></div>
+            </div>
+            <h4>明细清单</h4>
+            <table>
+                <thead>
+                    <tr><th>日期</th><th>类型</th><th>金额</th><th>操作</th></tr>
+                </thead>
+                <tbody id="man-list"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 页面2：女士 🙋🏼‍♀️赢钱 -->
+    <div class="page" id="page2">
+        <h2>🙋🏼‍♀️ 月度输赢记账</h2>
+        <div class="card">
+            <h3>新增当日记录</h3>
+            <input type="date" id="m2-date">
+            <br>
+            <input type="number" placeholder="金额" id="m2-money">
+            <br>
+            <button class="btn-red" onclick="addRecord('woman','win')">✅记赢</button>
+            <button class="btn-green" onclick="addRecord('woman','lose')">❌记输</button>
+            <button class="btn-gray" onclick="clearMonthData('woman')">清空本月数据</button>
+        </div>
+        <div class="card">
+            <h3>当月日历</h3>
+            <div id="calendar-woman" class="calendar-box"></div>
+        </div>
+        <div class="card">
+            <h3>月度统计汇总</h3>
+            <div class="stat-row">
+                <div>总盈利：<span class="win-text" id="woman-total-win">0.00</span></div>
+                <div>总亏损：<span class="lose-text" id="woman-total-lose">0.00</span></div>
+                <div>本月净盈亏：<span class="balance-text" id="woman-balance">0.00</span></div>
+            </div>
+            <h4>明细清单</h4>
+            <table>
+                <thead>
+                    <tr><th>日期</th><th>类型</th><th>金额</th><th>操作</th></tr>
+                </thead>
+                <tbody id="woman-list"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 页面3：存钱计划 -->
+    <div class="page" id="page3">
+        <h2>💰存钱计划｜收支记账</h2>
+        <div class="card">
+            <h3>新增收支</h3>
+            <input type="date" id="cash-date">
+            <select id="cash-type">
+                <option>收入</option>
+                <option>支出</option>
+            </select>
+            <select id="cash-cate">
+                <option>餐饮</option>
+                <option>购物</option>
+                <option>交通</option>
+                <option>娱乐</option>
+                <option>房租水电</option>
+                <option>工资</option>
+                <option>其他</option>
+            </select>
+            <br>
+            <input type="number" step="0.01" placeholder="金额" id="cash-money">
+            <input placeholder="备注" id="cash-note">
+            <br>
+            <button class="btn-blue" onclick="addCashBill()">保存账单</button>
+            <button class="btn-gray" onclick="clearAllCash()">清空收支记录</button>
+        </div>
+        <div class="card">
+            <h3>收支汇总</h3>
+            <div class="stat-row">
+                <div>总收入：<span class="win-text" id="cash-in">0.00</span></div>
+                <div>总支出：<span class="lose-text" id="cash-out">0.00</span></div>
+                <div>当前结余：<span id="cash-surplus">0.00</span></div>
+            </div>
+            <h4>账单明细</h4>
+            <table>
+                <thead>
+                    <tr><th>日期</th><th>类型</th><th>分类</th><th>金额</th><th>备注</th><th>操作</th></tr>
+                </thead>
+                <tbody id="cash-list"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// 菜单切换
+document.querySelectorAll(".menu-item").forEach(item=>{
+    item.onclick=()=>{
+        document.querySelectorAll(".menu-item").forEach(m=>m.classList.remove("active"))
+        document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"))
+        item.classList.add("active")
+        const target = item.getAttribute("data-page")
+        document.getElementById(target).classList.add("active")
+    }
+})
+
+// 本地存储
+const KEY_MAN = "record_man_data"
+const KEY_WOMAN = "record_woman_data"
+const KEY_CASH = "cash_bill_data"
+
+let manData = JSON.parse(localStorage.getItem(KEY_MAN)) || []
+let womanData = JSON.parse(localStorage.getItem(KEY_WOMAN)) || []
+let cashData = JSON.parse(localStorage.getItem(KEY_CASH)) || []
+
+// 默认日期
+const today = new Date().toISOString().split('T')[0]
+document.getElementById("m1-date").value = today
+document.getElementById("m2-date").value = today
+document.getElementById("cash-date").value = today
+
+// 添加输赢记录
+function addRecord(who,status){
+    const dateId = who=="man" ? "m1-date":"m2-date"
+    const moneyId = who=="man" ? "m1-money":"m2-money"
+    const date = document.getElementById(dateId).value
+    const num = Number(document.getElementById(moneyId).value)
+    if(!date || isNaN(num) || num<=0){alert("填写正确日期和金额");return}
+    const arr = who=="man" ? manData : womanData
+    arr.push({
+        id:Date.now(),
+        date,
+        type:status,
+        money:num
+    })
+    saveRecord(who)
+    refreshAll()
+}
+
+function saveRecord(who){
+    if(who=="man") localStorage.setItem(KEY_MAN,JSON.stringify(manData))
+    else localStorage.setItem(KEY_WOMAN,JSON.stringify(womanData))
+}
+
+// 清空单人本月数据
+function clearMonthData(who){
+    if(!confirm("确定清空本月所有记录？"))return
+    const nowMonth = new Date().toISOString().slice(0,7)
+    if(who=="man"){
+        manData = manData.filter(d=>!d.date.startsWith(nowMonth))
+        saveRecord("man")
+    }else{
+        womanData = womanData.filter(d=>!d.date.startsWith(nowMonth))
+        saveRecord("woman")
+    }
+    refreshAll()
+}
+
+// 绘制月历
+function renderCalendar(who,wrapId,data){
+    const wrap = document.getElementById(wrapId)
+    const currentMonth = new Date()
+    const year = currentMonth.getFullYear()
+    const month = currentMonth.getMonth()
+    const firstDay = new Date(year,month,1)
+    const lastDay = new Date(year,month+1,0)
+    let html=""
+    // 空白前置
+    for(let i=0;i<firstDay.getDay();i++){
+        html += `<div class="calendar-day day-empty"></div>`
+    }
+    // 日期循环
+    for(let d=1;d<=lastDay.getDate();d++){
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+        const find = data.find(item=>item.date==dateStr)
+        let cls = "calendar-day day-empty"
+        let extra = ""
+        if(find){
+            if(find.type=="win"){cls="calendar-day day-win";extra=`+${find.money}`}
+            else {cls="calendar-day day-lose";extra=`-${find.money}`}
+        }
+        html += `<div class="${cls}">${d}<br><small>${extra}</small></div>`
+    }
+    wrap.innerHTML = html
+}
+
+// 刷新输赢统计与列表
+function refreshWinLoss(){
+    calcSingle("man",manData,"man")
+    calcSingle("woman",womanData,"woman")
+}
+
+function calcSingle(who,list,prefix){
+    const monthStr = new Date().toISOString().slice(0,7)
+    const monthList = list.filter(x=>x.date.startsWith(monthStr))
+    let winTotal = 0, loseTotal = 0
+    monthList.forEach(i=>{
+        if(i.type=="win") winTotal += i.money
+        else loseTotal += i.money
+    })
+    const balance = winTotal - loseTotal
+    document.getElementById(`${prefix}-total-win`).innerText = winTotal.toFixed(2)
+    document.getElementById(`${prefix}-total-lose`).innerText = loseTotal.toFixed(2)
+    document.getElementById(`${prefix}-balance`).innerText = balance.toFixed(2)
+
+    // 渲染明细
+    let tableHtml = ""
+    monthList.sort((a,b)=>new Date(b.date)-new Date(a.date))
+    monthList.forEach(row=>{
+        const sign = row.type=="win" ? "+":"-"
+        const color = row.type=="win" ? "#dd5879":"#279e68"
+        tableHtml += `<tr>
+            <td>${row.date}</td>
+            <td style="color:${color}">${row.type=="win"?"赢":"输"}</td>
+            <td style="color:${color}">${sign}${row.money}</td>
+            <td><button onclick="delRecord('${who}',${row.id})" class="btn-gray">删除</button></td>
+        </tr>`
+    })
+    document.getElementById(`${prefix}-list`).innerHTML = tableHtml || "<tr><td colspan='4'>暂无记录</td>"
+}
+
+function delRecord(who,id){
+    if(!confirm("删除这条记录？"))return
+    if(who=="man"){
+        manData = manData.filter(x=>x.id != id)
+        saveRecord("man")
+    }else{
+        womanData = womanData.filter(x=>x.id != id)
+        saveRecord("woman")
+    }
+    refreshAll()
+}
+
+// =========存钱计划收支模块========
+function addCashBill(){
+    const date = document.getElementById("cash-date").value
+    const type = document.getElementById("cash-type").value
+    const cate = document.getElementById("cash-cate").value
+    const money = parseFloat(document.getElementById("cash-money").value)
+    const note = document.getElementById("cash-note").value.trim()
+    if(!date || isNaN(money) || money <=0){alert("请填写有效金额");return}
+    cashData.push({
+        id:Date.now(),date,type,cate,money,note
+    })
+    localStorage.setItem(KEY_CASH,JSON.stringify(cashData))
+    refreshCash()
+}
+
+function refreshCash(){
+    let income = 0,expense =0
+    cashData.forEach(d=>{
+        if(d.type=="收入") income += d.money
+        else expense += d.money
+    })
+    const surplus = income-expense
+    document.getElementById("cash-in").innerText = income.toFixed(2)
+    document.getElementById("cash-out").innerText = expense.toFixed(2)
+    document.getElementById("cash-surplus").innerText = surplus.toFixed(2)
+
+    let html=""
+    cashData.sort((a,b)=>new Date(b.date)-new Date(a.date))
+    cashData.forEach(row=>{
+        const clr = row.type=="收入" ? "#dd5879":"#279e68"
+        html += `<tr>
+        <td>${row.date}</td>
+        <td style="color:${clr}">${row.type}</td>
+        <td>${row.cate}</td>
+        <td style="color:${clr}">${row.money.toFixed(2)}</td>
+        <td>${row.note}</td>
+        <td><button class="btn-gray" onclick="delCash(${row.id})">删除</button></td>
+        </tr>`
+    })
+    document.getElementById("cash-list").innerHTML = html || "<tr><td colspan='6'>暂无账单</td>"
+}
+
+function delCash(id){
+    cashData = cashData.filter(x=>x.id != id)
+    localStorage.setItem(KEY_CASH,JSON.stringify(cashData))
+    refreshCash()
+}
+
+function clearAllCash(){
+    if(!confirm("清空全部收支记录？")) return
+    cashData = []
+    localStorage.setItem(KEY_CASH,JSON.stringify(cashData))
+    refreshCash()
+}
+
+// 全局全部刷新
+function refreshAll(){
+    renderCalendar("man","calendar-man",manData)
+    renderCalendar("woman","calendar-woman",womanData)
+    refreshWinLoss()
+    refreshCash()
+}
+
+// 页面加载完成后渲染，解决空白
+window.onload = function(){
+    refreshAll()
+}
+</script>
+</body>
+</html>

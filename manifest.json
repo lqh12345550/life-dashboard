@@ -1,0 +1,14 @@
+{
+  "name": "赢赢赢",
+  "short_name": "赢赢赢",
+  "description": "赢赢赢生活工作台 - 记账存钱",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#dd5879",
+  "theme_color": "#dd5879",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

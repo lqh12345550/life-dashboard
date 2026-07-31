@@ -280,6 +280,17 @@ th{background:#fff0f4;color:#774953;font-weight:600}
             <div class="stat-row">
                 <div>💰 总净存：<span class="balance-text" id="cash-total">0.00</span></div>
             </div>
+        </div>
+        <div class="card">
+            <h3>📅 每月汇总</h3>
+            <table>
+                <thead>
+                    <tr><th>月份</th><th>🙋🏻‍♂️存</th><th>🙋🏻‍♂️取</th><th>🙋🏻‍♂️净</th><th>🙋🏼‍♀️存</th><th>🙋🏼‍♀️取</th><th>🙋🏼‍♀️净</th><th>💰合计</th></tr>
+                </thead>
+                <tbody id="cash-monthly"></tbody>
+            </table>
+        </div>
+        <div class="card">
             <h4>明细清单</h4>
             <table>
                 <thead>
@@ -469,6 +480,35 @@ function refreshCash(){
     document.getElementById("cash-womantake").innerText = womanTake.toFixed(2)
     document.getElementById("cash-womannet").innerText = womanNet.toFixed(2)
     document.getElementById("cash-total").innerText = totalNet.toFixed(2)
+
+    // 每月汇总
+    const monthMap = {}
+    cashData.forEach(d=>{
+        const m = d.date.substring(0,7)
+        if(!monthMap[m]) monthMap[m] = {ms:0,mt:0,ws:0,wt:0}
+        if(d.cate=="🙋🏻‍♂️存") monthMap[m].ms += d.money
+        else if(d.cate=="🙋🏻‍♂️取") monthMap[m].mt += d.money
+        else if(d.cate=="🙋🏼‍♀️存") monthMap[m].ws += d.money
+        else if(d.cate=="🙋🏼‍♀️取") monthMap[m].wt += d.money
+    })
+    const months = Object.keys(monthMap).sort().reverse()
+    let mhtml = ""
+    months.forEach(m=>{
+        const d = monthMap[m]
+        const mn = d.ms-d.mt, wn = d.ws-d.wt, tt = mn+wn
+        const mc = mn>=0?"#dd5879":"#279e68", wc = wn>=0?"#dd5879":"#279e68", tc = tt>=0?"#dd5879":"#279e68"
+        mhtml += `<tr>
+            <td><b>${m}</b></td>
+            <td style="color:#dd5879">${d.ms.toFixed(2)}</td>
+            <td style="color:#279e68">${d.mt.toFixed(2)}</td>
+            <td style="color:${mc};font-weight:bold">${mn>=0?"+":""}${mn.toFixed(2)}</td>
+            <td style="color:#dd5879">${d.ws.toFixed(2)}</td>
+            <td style="color:#279e68">${d.wt.toFixed(2)}</td>
+            <td style="color:${wc};font-weight:bold">${wn>=0?"+":""}${wn.toFixed(2)}</td>
+            <td style="color:${tc};font-weight:bold">${tt>=0?"+":""}${tt.toFixed(2)}</td>
+        </tr>`
+    })
+    document.getElementById("cash-monthly").innerHTML = mhtml || "<tr><td colspan='8'>暂无记录</td>"
 
     let html=""
     cashData.sort((a,b)=>new Date(b.date)-new Date(a.date))

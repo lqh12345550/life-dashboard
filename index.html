@@ -249,55 +249,64 @@ th{background:#fff0f4;color:#774953;font-weight:600}
     <!-- 页面3：存钱计划 -->
     <div class="page" id="page3">
         <h2>💰存钱计划｜存款取款</h2>
-        <div class="card">
-            <h3>新增记录</h3>
-            <input type="date" id="cash-date">
-            <select id="cash-cate">
-                <option>🙋🏻‍♂️存</option>
-                <option>🙋🏻‍♂️取</option>
-                <option>🙋🏼‍♀️存</option>
-                <option>🙋🏼‍♀️取</option>
-            </select>
-            <br>
-            <input type="number" step="0.01" placeholder="金额" id="cash-money">
-            <input placeholder="备注" id="cash-note">
-            <br>
-            <button class="btn-blue" onclick="addCashBill()">保存记录</button>
-            <button class="btn-gray" onclick="clearAllCash()">清空全部记录</button>
-        </div>
-        <div class="card">
-            <h3>存钱汇总</h3>
-            <div class="stat-row">
-                <div>🙋🏻‍♂️存款：<span class="win-text" id="cash-mansave">0.00</span></div>
-                <div>🙋🏻‍♂️取款：<span class="lose-text" id="cash-mantake">0.00</span></div>
-                <div>🙋🏻‍♂️净存：<span id="cash-mannet">0.00</span></div>
+        <!-- 左侧汇总 + 右侧明细 两栏布局 -->
+        <div style="display:flex;gap:20px;flex-wrap:wrap;">
+            <!-- 左侧：汇总区 -->
+            <div style="flex:0 0 340px;min-width:280px;">
+                <div class="card">
+                    <h3>📅 选择月份查看</h3>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button class="btn-gray" onclick="changeCashMonth(-1)">◀</button>
+                        <span style="font-size:17px;font-weight:bold;color:#633942;min-width:100px;text-align:center;" id="cash-month-label">本月</span>
+                        <button class="btn-gray" onclick="changeCashMonth(1)">▶</button>
+                        <button class="btn-blue" onclick="cashViewMonth='';refreshCash()" style="margin-left:8px;">全部</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>本月汇总</h3>
+                    <div class="stat-row">
+                        <div>🙋🏻‍♂️存款：<span class="win-text" id="cash-mansave">0.00</span></div>
+                        <div>🙋🏻‍♂️取款：<span class="lose-text" id="cash-mantake">0.00</span></div>
+                        <div>🙋🏻‍♂️净存：<span id="cash-mannet">0.00</span></div>
+                    </div>
+                    <div class="stat-row">
+                        <div>🙋🏼‍♀️存款：<span class="win-text" id="cash-womansave">0.00</span></div>
+                        <div>🙋🏼‍♀️取款：<span class="lose-text" id="cash-womantake">0.00</span></div>
+                        <div>🙋🏼‍♀️净存：<span id="cash-womannet">0.00</span></div>
+                    </div>
+                    <div class="stat-row">
+                        <div>💰 合计净存：<span class="balance-text" id="cash-total">0.00</span></div>
+                    </div>
+                </div>
             </div>
-            <div class="stat-row">
-                <div>🙋🏼‍♀️存款：<span class="win-text" id="cash-womansave">0.00</span></div>
-                <div>🙋🏼‍♀️取款：<span class="lose-text" id="cash-womantake">0.00</span></div>
-                <div>🙋🏼‍♀️净存：<span id="cash-womannet">0.00</span></div>
+            <!-- 右侧：录入 + 明细 -->
+            <div style="flex:1;min-width:300px;">
+                <div class="card">
+                    <h3>新增记录</h3>
+                    <input type="date" id="cash-date">
+                    <select id="cash-cate">
+                        <option>🙋🏻‍♂️存</option>
+                        <option>🙋🏻‍♂️取</option>
+                        <option>🙋🏼‍♀️存</option>
+                        <option>🙋🏼‍♀️取</option>
+                    </select>
+                    <br>
+                    <input type="number" step="0.01" placeholder="金额" id="cash-money">
+                    <input placeholder="备注" id="cash-note">
+                    <br>
+                    <button class="btn-blue" onclick="addCashBill()">保存记录</button>
+                    <button class="btn-gray" onclick="clearAllCash()">清空全部记录</button>
+                </div>
+                <div class="card">
+                    <h4>明细清单</h4>
+                    <table>
+                        <thead>
+                            <tr><th>日期</th><th>分类</th><th>金额</th><th>备注</th><th>操作</th></tr>
+                        </thead>
+                        <tbody id="cash-list"></tbody>
+                    </table>
+                </div>
             </div>
-            <div class="stat-row">
-                <div>💰 总净存：<span class="balance-text" id="cash-total">0.00</span></div>
-            </div>
-        </div>
-        <div class="card">
-            <h3>📅 每月汇总</h3>
-            <table>
-                <thead>
-                    <tr><th>月份</th><th>🙋🏻‍♂️存</th><th>🙋🏻‍♂️取</th><th>🙋🏻‍♂️净</th><th>🙋🏼‍♀️存</th><th>🙋🏼‍♀️取</th><th>🙋🏼‍♀️净</th><th>💰合计</th></tr>
-                </thead>
-                <tbody id="cash-monthly"></tbody>
-            </table>
-        </div>
-        <div class="card">
-            <h4>明细清单</h4>
-            <table>
-                <thead>
-                    <tr><th>日期</th><th>分类</th><th>金额</th><th>备注</th><th>操作</th></tr>
-                </thead>
-                <tbody id="cash-list"></tbody>
-            </table>
         </div>
     </div>
 </div>
@@ -448,6 +457,24 @@ function delRecord(who,id){
 }
 
 // =========存钱计划========
+let cashViewMonth = "" // 空=全部，格式"2026-07"
+
+function changeCashMonth(dir){
+    const now = new Date()
+    const curYear = now.getFullYear(), curMonth = now.getMonth()+1
+    let y, m
+    if(!cashViewMonth){
+        y=curYear; m=curMonth
+    }else{
+        [y,m] = cashViewMonth.split('-').map(Number)
+    }
+    m += dir
+    if(m<1){y--;m=12}
+    if(m>12){y++;m=1}
+    cashViewMonth = `${y}-${String(m).padStart(2,'0')}`
+    refreshCash()
+}
+
 function addCashBill(){
     const date = document.getElementById("cash-date").value
     const cate = document.getElementById("cash-cate").value
@@ -462,8 +489,23 @@ function addCashBill(){
 }
 
 function refreshCash(){
+    // 筛选数据
+    let filtered = cashData
+    if(cashViewMonth){
+        filtered = cashData.filter(d=>d.date.startsWith(cashViewMonth))
+    }
+    
+    // 月份标签
+    if(cashViewMonth){
+        const [y,m] = cashViewMonth.split('-')
+        document.getElementById("cash-month-label").innerText = `${y}年${parseInt(m)}月`
+    }else{
+        document.getElementById("cash-month-label").innerText = "全部记录"
+    }
+
+    // 计算汇总
     let manSave=0, manTake=0, womanSave=0, womanTake=0
-    cashData.forEach(d=>{
+    filtered.forEach(d=>{
         if(d.cate=="🙋🏻‍♂️存") manSave += d.money
         else if(d.cate=="🙋🏻‍♂️取") manTake += d.money
         else if(d.cate=="🙋🏼‍♀️存") womanSave += d.money
@@ -481,39 +523,11 @@ function refreshCash(){
     document.getElementById("cash-womannet").innerText = womanNet.toFixed(2)
     document.getElementById("cash-total").innerText = totalNet.toFixed(2)
 
-    // 每月汇总
-    const monthMap = {}
-    cashData.forEach(d=>{
-        const m = d.date.substring(0,7)
-        if(!monthMap[m]) monthMap[m] = {ms:0,mt:0,ws:0,wt:0}
-        if(d.cate=="🙋🏻‍♂️存") monthMap[m].ms += d.money
-        else if(d.cate=="🙋🏻‍♂️取") monthMap[m].mt += d.money
-        else if(d.cate=="🙋🏼‍♀️存") monthMap[m].ws += d.money
-        else if(d.cate=="🙋🏼‍♀️取") monthMap[m].wt += d.money
-    })
-    const months = Object.keys(monthMap).sort().reverse()
-    let mhtml = ""
-    months.forEach(m=>{
-        const d = monthMap[m]
-        const mn = d.ms-d.mt, wn = d.ws-d.wt, tt = mn+wn
-        const mc = mn>=0?"#dd5879":"#279e68", wc = wn>=0?"#dd5879":"#279e68", tc = tt>=0?"#dd5879":"#279e68"
-        mhtml += `<tr>
-            <td><b>${m}</b></td>
-            <td style="color:#dd5879">${d.ms.toFixed(2)}</td>
-            <td style="color:#279e68">${d.mt.toFixed(2)}</td>
-            <td style="color:${mc};font-weight:bold">${mn>=0?"+":""}${mn.toFixed(2)}</td>
-            <td style="color:#dd5879">${d.ws.toFixed(2)}</td>
-            <td style="color:#279e68">${d.wt.toFixed(2)}</td>
-            <td style="color:${wc};font-weight:bold">${wn>=0?"+":""}${wn.toFixed(2)}</td>
-            <td style="color:${tc};font-weight:bold">${tt>=0?"+":""}${tt.toFixed(2)}</td>
-        </tr>`
-    })
-    document.getElementById("cash-monthly").innerHTML = mhtml || "<tr><td colspan='8'>暂无记录</td>"
-
+    // 明细列表
     let html=""
-    cashData.sort((a,b)=>new Date(b.date)-new Date(a.date))
+    filtered.sort((a,b)=>new Date(b.date)-new Date(a.date))
     const cateColors = {"🙋🏻‍♂️存":"#dd5879","🙋🏻‍♂️取":"#279e68","🙋🏼‍♀️存":"#dd5879","🙋🏼‍♀️取":"#279e68"}
-    cashData.forEach(row=>{
+    filtered.forEach(row=>{
         const clr = cateColors[row.cate] || "#633942"
         html += `<tr>
         <td>${row.date}</td>
@@ -527,13 +541,14 @@ function refreshCash(){
 }
 
 function delCash(id){
+    if(!confirm("确定删除这条记录？")) return
     cashData = cashData.filter(x=>x.id != id)
     localStorage.setItem(KEY_CASH,JSON.stringify(cashData))
     refreshCash()
 }
 
 function clearAllCash(){
-    if(!confirm("清空全部收支记录？")) return
+    if(!confirm("清空全部存钱记录？")) return
     cashData = []
     localStorage.setItem(KEY_CASH,JSON.stringify(cashData))
     refreshCash()

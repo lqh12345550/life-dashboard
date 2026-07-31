@@ -248,41 +248,42 @@ th{background:#fff0f4;color:#774953;font-weight:600}
 
     <!-- 页面3：存钱计划 -->
     <div class="page" id="page3">
-        <h2>💰存钱计划｜收支记账</h2>
+        <h2>💰存钱计划｜存款取款</h2>
         <div class="card">
-            <h3>新增收支</h3>
+            <h3>新增记录</h3>
             <input type="date" id="cash-date">
-            <select id="cash-type">
-                <option>收入</option>
-                <option>支出</option>
-            </select>
             <select id="cash-cate">
-                <option>餐饮</option>
-                <option>购物</option>
-                <option>交通</option>
-                <option>娱乐</option>
-                <option>房租水电</option>
-                <option>工资</option>
-                <option>其他</option>
+                <option>🙋🏻‍♂️存</option>
+                <option>🙋🏻‍♂️取</option>
+                <option>🙋🏼‍♀️存</option>
+                <option>🙋🏼‍♀️取</option>
             </select>
             <br>
             <input type="number" step="0.01" placeholder="金额" id="cash-money">
             <input placeholder="备注" id="cash-note">
             <br>
-            <button class="btn-blue" onclick="addCashBill()">保存账单</button>
-            <button class="btn-gray" onclick="clearAllCash()">清空收支记录</button>
+            <button class="btn-blue" onclick="addCashBill()">保存记录</button>
+            <button class="btn-gray" onclick="clearAllCash()">清空全部记录</button>
         </div>
         <div class="card">
-            <h3>收支汇总</h3>
+            <h3>存钱汇总</h3>
             <div class="stat-row">
-                <div>总收入：<span class="win-text" id="cash-in">0.00</span></div>
-                <div>总支出：<span class="lose-text" id="cash-out">0.00</span></div>
-                <div>当前结余：<span id="cash-surplus">0.00</span></div>
+                <div>🙋🏻‍♂️存款：<span class="win-text" id="cash-mansave">0.00</span></div>
+                <div>🙋🏻‍♂️取款：<span class="lose-text" id="cash-mantake">0.00</span></div>
+                <div>🙋🏻‍♂️净存：<span id="cash-mannet">0.00</span></div>
             </div>
-            <h4>账单明细</h4>
+            <div class="stat-row">
+                <div>🙋🏼‍♀️存款：<span class="win-text" id="cash-womansave">0.00</span></div>
+                <div>🙋🏼‍♀️取款：<span class="lose-text" id="cash-womantake">0.00</span></div>
+                <div>🙋🏼‍♀️净存：<span id="cash-womannet">0.00</span></div>
+            </div>
+            <div class="stat-row">
+                <div>💰 总净存：<span class="balance-text" id="cash-total">0.00</span></div>
+            </div>
+            <h4>明细清单</h4>
             <table>
                 <thead>
-                    <tr><th>日期</th><th>类型</th><th>分类</th><th>金额</th><th>备注</th><th>操作</th></tr>
+                    <tr><th>日期</th><th>分类</th><th>金额</th><th>备注</th><th>操作</th></tr>
                 </thead>
                 <tbody id="cash-list"></tbody>
             </table>
@@ -429,46 +430,54 @@ function delRecord(who,id){
     refreshAll()
 }
 
-// =========存钱计划收支模块========
+// =========存钱计划========
 function addCashBill(){
     const date = document.getElementById("cash-date").value
-    const type = document.getElementById("cash-type").value
     const cate = document.getElementById("cash-cate").value
     const money = parseFloat(document.getElementById("cash-money").value)
     const note = document.getElementById("cash-note").value.trim()
     if(!date || isNaN(money) || money <=0){alert("请填写有效金额");return}
     cashData.push({
-        id:Date.now(),date,type,cate,money,note
+        id:Date.now(),date,cate,money,note
     })
     localStorage.setItem(KEY_CASH,JSON.stringify(cashData))
     refreshCash()
 }
 
 function refreshCash(){
-    let income = 0,expense =0
+    let manSave=0, manTake=0, womanSave=0, womanTake=0
     cashData.forEach(d=>{
-        if(d.type=="收入") income += d.money
-        else expense += d.money
+        if(d.cate=="🙋🏻‍♂️存") manSave += d.money
+        else if(d.cate=="🙋🏻‍♂️取") manTake += d.money
+        else if(d.cate=="🙋🏼‍♀️存") womanSave += d.money
+        else if(d.cate=="🙋🏼‍♀️取") womanTake += d.money
     })
-    const surplus = income-expense
-    document.getElementById("cash-in").innerText = income.toFixed(2)
-    document.getElementById("cash-out").innerText = expense.toFixed(2)
-    document.getElementById("cash-surplus").innerText = surplus.toFixed(2)
+    const manNet = manSave - manTake
+    const womanNet = womanSave - womanTake
+    const totalNet = manNet + womanNet
+
+    document.getElementById("cash-mansave").innerText = manSave.toFixed(2)
+    document.getElementById("cash-mantake").innerText = manTake.toFixed(2)
+    document.getElementById("cash-mannet").innerText = manNet.toFixed(2)
+    document.getElementById("cash-womansave").innerText = womanSave.toFixed(2)
+    document.getElementById("cash-womantake").innerText = womanTake.toFixed(2)
+    document.getElementById("cash-womannet").innerText = womanNet.toFixed(2)
+    document.getElementById("cash-total").innerText = totalNet.toFixed(2)
 
     let html=""
     cashData.sort((a,b)=>new Date(b.date)-new Date(a.date))
+    const cateColors = {"🙋🏻‍♂️存":"#dd5879","🙋🏻‍♂️取":"#279e68","🙋🏼‍♀️存":"#dd5879","🙋🏼‍♀️取":"#279e68"}
     cashData.forEach(row=>{
-        const clr = row.type=="收入" ? "#dd5879":"#279e68"
+        const clr = cateColors[row.cate] || "#633942"
         html += `<tr>
         <td>${row.date}</td>
-        <td style="color:${clr}">${row.type}</td>
-        <td>${row.cate}</td>
+        <td style="color:${clr};font-weight:600">${row.cate}</td>
         <td style="color:${clr}">${row.money.toFixed(2)}</td>
-        <td>${row.note}</td>
+        <td>${row.note||""}</td>
         <td><button class="btn-gray" onclick="delCash(${row.id})">删除</button></td>
         </tr>`
     })
-    document.getElementById("cash-list").innerHTML = html || "<tr><td colspan='6'>暂无账单</td>"
+    document.getElementById("cash-list").innerHTML = html || "<tr><td colspan='5'>暂无记录</td>"
 }
 
 function delCash(id){

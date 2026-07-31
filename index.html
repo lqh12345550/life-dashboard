@@ -310,7 +310,13 @@ const KEY_CASH = "cash_bill_data"
 
 let manData = JSON.parse(localStorage.getItem(KEY_MAN)) || []
 let womanData = JSON.parse(localStorage.getItem(KEY_WOMAN)) || []
-let cashData = JSON.parse(localStorage.getItem(KEY_CASH)) || []
+let cashData = []
+// 清除旧数据，防止结构不兼容
+try{
+    const old = JSON.parse(localStorage.getItem(KEY_CASH))
+    if(old && old.length>0 && old[0].type){ localStorage.removeItem(KEY_CASH) }
+}catch(e){}
+cashData = JSON.parse(localStorage.getItem(KEY_CASH)) || []
 
 // 默认日期
 const today = new Date().toISOString().split('T')[0]

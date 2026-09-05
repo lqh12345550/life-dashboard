@@ -407,12 +407,27 @@ function changeMonth(who,dir){
     if(nm<0){ny--;nm=11}
     if(nm>11){ny++;nm=0}
     viewMonth[who] = `${ny}-${String(nm+1).padStart(2,'0')}`
+    syncDateInput(who)
     refreshWinLoss()
 }
 
 function goThisMonth(who){
     viewMonth[who] = ""
+    syncDateInput(who)
     refreshWinLoss()
+}
+
+// 日期输入框跟随所选月份（保持日号，天数不足取月末）
+function syncDateInput(who){
+    const dateId = who=="man" ? "m1-date" : "m2-date"
+    const input = document.getElementById(dateId)
+    if(!input) return
+    const curVal = input.value || localToday()
+    const curDay = parseInt(curVal.slice(8,10), 10) || 1
+    const {y,m} = getYM(who)
+    const daysInMonth = new Date(y, m+1, 0).getDate()
+    const day = Math.min(curDay, daysInMonth)
+    input.value = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
 }
 
 // 清空单人当前查看月份的数据

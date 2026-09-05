@@ -189,10 +189,18 @@ th{background:#fff0f4;color:#774953;font-weight:600}
             <br>
             <button class="btn-red" onclick="addRecord('man','win')">✅记赢</button>
             <button class="btn-green" onclick="addRecord('man','lose')">❌记输</button>
-            <button class="btn-gray" onclick="clearMonthData('man')">清空本月数据</button>
+            <button class="btn-gray" onclick="clearMonthData('man')">清空当月数据</button>
         </div>
         <div class="card">
-            <h3>当月日历</h3>
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                <h3 style="margin:0;">📅 输赢日历</h3>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <button class="btn-gray" onclick="changeMonth('man',-1)">◀</button>
+                    <span id="man-month-label" style="font-weight:bold;color:#633942;min-width:86px;text-align:center;">本月</span>
+                    <button class="btn-gray" onclick="changeMonth('man',1)">▶</button>
+                    <button class="btn-blue" onclick="goThisMonth('man')">本月</button>
+                </div>
+            </div>
             <div id="calendar-man" class="calendar-box"></div>
         </div>
         <div class="card">
@@ -223,10 +231,18 @@ th{background:#fff0f4;color:#774953;font-weight:600}
             <br>
             <button class="btn-red" onclick="addRecord('woman','win')">✅记赢</button>
             <button class="btn-green" onclick="addRecord('woman','lose')">❌记输</button>
-            <button class="btn-gray" onclick="clearMonthData('woman')">清空本月数据</button>
+            <button class="btn-gray" onclick="clearMonthData('woman')">清空当月数据</button>
         </div>
         <div class="card">
-            <h3>当月日历</h3>
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                <h3 style="margin:0;">📅 输赢日历</h3>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <button class="btn-gray" onclick="changeMonth('woman',-1)">◀</button>
+                    <span id="woman-month-label" style="font-weight:bold;color:#633942;min-width:86px;text-align:center;">本月</span>
+                    <button class="btn-gray" onclick="changeMonth('woman',1)">▶</button>
+                    <button class="btn-blue" onclick="goThisMonth('woman')">本月</button>
+                </div>
+            </div>
             <div id="calendar-woman" class="calendar-box"></div>
         </div>
         <div class="card">
@@ -339,7 +355,7 @@ try{
 cashData = JSON.parse(localStorage.getItem(KEY_CASH)) || []
 
 // 默认日期
-const today = new Date().toISOString().split('T')[0]
+const today = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`})()
 document.getElementById("m1-date").value = today
 document.getElementById("m2-date").value = today
 document.getElementById("cash-date").value = today
@@ -367,15 +383,48 @@ function saveRecord(who){
     else localStorage.setItem(KEY_WOMAN,JSON.stringify(womanData))
 }
 
-// 清空单人本月数据
+// 查看月份状态：'' = 本月，格式 "2026-09"
+let viewMonth = {man:"", woman:""}
+
+// 本地日期（修复时区问题）
+function localToday(){
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+
+function getYM(who){
+    if(viewMonth[who]){
+        const [y,m] = viewMonth[who].split('-').map(Number)
+        return {y, m:m-1}
+    }
+    const now = new Date()
+    return {y:now.getFullYear(), m:now.getMonth()}
+}
+
+function changeMonth(who,dir){
+    const {y,m} = getYM(who)
+    let ny=y, nm=m+dir
+    if(nm<0){ny--;nm=11}
+    if(nm>11){ny++;nm=0}
+    viewMonth[who] = `${ny}-${String(nm+1).padStart(2,'0')}`
+    refreshWinLoss()
+}
+
+function goThisMonth(who){
+    viewMonth[who] = ""
+    refreshWinLoss()
+}
+
+// 清空单人当前查看月份的数据
 function clearMonthData(who){
-    if(!confirm("确定清空本月所有记录？"))return
-    const nowMonth = new Date().toISOString().slice(0,7)
+    const {y,m} = getYM(who)
+    const monthKey = `${y}-${String(m+1).padStart(2,'0')}`
+    if(!confirm(`确定清空 ${y}年${m+1}月 的所有记录？`))return
     if(who=="man"){
-        manData = manData.filter(d=>!d.date.startsWith(nowMonth))
+        manData = manData.filter(d=>!d.date.startsWith(monthKey))
         saveRecord("man")
     }else{
-        womanData = womanData.filter(d=>!d.date.startsWith(nowMonth))
+        womanData = womanData.filter(d=>!d.date.startsWith(monthKey))
         saveRecord("woman")
     }
     refreshAll()
@@ -384,15 +433,27 @@ function clearMonthData(who){
 // 绘制月历
 function renderCalendar(who,wrapId,data){
     const wrap = document.getElementById(wrapId)
-    const currentMonth = new Date()
-    const year = currentMonth.getFullYear()
-    const month = currentMonth.getMonth()
+    const {y:year, m:month} = getYM(who)
     const firstDay = new Date(year,month,1)
     const lastDay = new Date(year,month+1,0)
+
+    // 更新月份标签
+    const label = document.getElementById(`${who}-month-label`)
+    if(label){
+        const now = new Date()
+        const isCur = year===now.getFullYear() && month===now.getMonth()
+        label.innerText = isCur ? `${year}年${month+1}月(本月)` : `${year}年${month+1}月`
+    }
+
     let html=""
+    // 星期表头
+    const weeks = ["日","一","二","三","四","五","六"]
+    weeks.forEach(w=>{
+        html += `<div style="text-align:center;font-weight:600;color:#774953;padding:6px 0;font-size:14px;">${w}</div>`
+    })
     // 空白前置
     for(let i=0;i<firstDay.getDay();i++){
-        html += `<div class="calendar-day day-empty"></div>`
+        html += `<div class="calendar-day day-empty" style="border:none;background:transparent;"></div>`
     }
     // 日期循环
     for(let d=1;d<=lastDay.getDate();d++){
@@ -416,7 +477,8 @@ function refreshWinLoss(){
 }
 
 function calcSingle(who,list,prefix){
-    const monthStr = new Date().toISOString().slice(0,7)
+    const {y,m} = getYM(who)
+    const monthStr = `${y}-${String(m+1).padStart(2,'0')}`
     const monthList = list.filter(x=>x.date.startsWith(monthStr))
     let winTotal = 0, loseTotal = 0
     monthList.forEach(i=>{

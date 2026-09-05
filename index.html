@@ -408,13 +408,13 @@ function changeMonth(who,dir){
     if(nm>11){ny++;nm=0}
     viewMonth[who] = `${ny}-${String(nm+1).padStart(2,'0')}`
     syncDateInput(who)
-    refreshWinLoss()
+    refreshAll()
 }
 
 function goThisMonth(who){
     viewMonth[who] = ""
     syncDateInput(who)
-    refreshWinLoss()
+    refreshAll()
 }
 
 // 日期输入框跟随所选月份（保持日号，天数不足取月末）
@@ -457,7 +457,7 @@ function renderCalendar(who,wrapId,data){
     if(label){
         const now = new Date()
         const isCur = year===now.getFullYear() && month===now.getMonth()
-        label.innerText = isCur ? `${year}年${month+1}月(本月)` : `${year}年${month+1}月`
+        label.textContent = isCur ? `${year}年${month+1}月(本月)` : `${year}年${month+1}月`
     }
 
     let html=""
@@ -501,9 +501,9 @@ function calcSingle(who,list,prefix){
         else loseTotal += i.money
     })
     const balance = winTotal - loseTotal
-    document.getElementById(`${prefix}-total-win`).innerText = winTotal.toFixed(2)
-    document.getElementById(`${prefix}-total-lose`).innerText = loseTotal.toFixed(2)
-    document.getElementById(`${prefix}-balance`).innerText = balance.toFixed(2)
+    document.getElementById(`${prefix}-total-win`).textContent = winTotal.toFixed(2)
+    document.getElementById(`${prefix}-total-lose`).textContent = loseTotal.toFixed(2)
+    document.getElementById(`${prefix}-balance`).textContent = balance.toFixed(2)
 
     // 渲染明细
     let tableHtml = ""
@@ -575,9 +575,9 @@ function refreshCash(){
     // 月份标签
     if(cashViewMonth){
         const [y,m] = cashViewMonth.split('-')
-        document.getElementById("cash-month-label").innerText = `${y}年${parseInt(m)}月`
+        document.getElementById("cash-month-label").textContent = `${y}年${parseInt(m)}月`
     }else{
-        document.getElementById("cash-month-label").innerText = "全部记录"
+        document.getElementById("cash-month-label").textContent = "全部记录"
     }
 
     // 计算汇总
@@ -592,13 +592,13 @@ function refreshCash(){
     const womanNet = womanSave - womanTake
     const totalNet = manNet + womanNet
 
-    document.getElementById("cash-mansave").innerText = manSave.toFixed(2)
-    document.getElementById("cash-mantake").innerText = manTake.toFixed(2)
-    document.getElementById("cash-mannet").innerText = manNet.toFixed(2)
-    document.getElementById("cash-womansave").innerText = womanSave.toFixed(2)
-    document.getElementById("cash-womantake").innerText = womanTake.toFixed(2)
-    document.getElementById("cash-womannet").innerText = womanNet.toFixed(2)
-    document.getElementById("cash-total").innerText = totalNet.toFixed(2)
+    document.getElementById("cash-mansave").textContent = manSave.toFixed(2)
+    document.getElementById("cash-mantake").textContent = manTake.toFixed(2)
+    document.getElementById("cash-mannet").textContent = manNet.toFixed(2)
+    document.getElementById("cash-womansave").textContent = womanSave.toFixed(2)
+    document.getElementById("cash-womantake").textContent = womanTake.toFixed(2)
+    document.getElementById("cash-womannet").textContent = womanNet.toFixed(2)
+    document.getElementById("cash-total").textContent = totalNet.toFixed(2)
 
     // 明细列表
     let html=""

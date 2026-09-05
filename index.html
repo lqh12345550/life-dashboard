@@ -270,16 +270,16 @@ th{background:#fff0f4;color:#774953;font-weight:600}
             <!-- 左侧：汇总区 -->
             <div style="flex:0 0 340px;min-width:280px;">
                 <div class="card">
-                    <h3>📅 选择月份查看</h3>
-                    <div style="display:flex;gap:8px;align-items:center;">
-                        <button class="btn-gray" onclick="changeCashMonth(-1)">◀</button>
+                    <h3 id="cash-sum-title">📅 选择月份查看（三页联动）</h3>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <button class="btn-gray" onclick="changeMonth('cash',-1)">◀</button>
                         <span style="font-size:17px;font-weight:bold;color:#633942;min-width:100px;text-align:center;" id="cash-month-label">本月</span>
-                        <button class="btn-gray" onclick="changeCashMonth(1)">▶</button>
-                        <button class="btn-blue" onclick="cashViewMonth='';refreshCash()" style="margin-left:8px;">全部</button>
+                        <button class="btn-gray" onclick="changeMonth('cash',1)">▶</button>
+                        <button class="btn-blue" onclick="goThisMonth('cash')" style="margin-left:8px;">本月</button>
                     </div>
                 </div>
                 <div class="card">
-                    <h3>本月汇总</h3>
+                    <h3 id="cash-sum-title">本月汇总</h3>
                     <div class="stat-row">
                         <div>🙋🏻‍♂️存款：<span class="win-text" id="cash-mansave">0.00</span></div>
                         <div>🙋🏻‍♂️取款：<span class="lose-text" id="cash-mantake">0.00</span></div>
@@ -292,6 +292,9 @@ th{background:#fff0f4;color:#774953;font-weight:600}
                     </div>
                     <div class="stat-row">
                         <div>💰 合计净存：<span class="balance-text" id="cash-total">0.00</span></div>
+                    </div>
+                    <div class="stat-row">
+                        <div>📈 历史累计净存：<span class="balance-text" id="cash-alltotal">0.00</span></div>
                     </div>
                 </div>
             </div>
@@ -383,8 +386,8 @@ function saveRecord(who){
     else localStorage.setItem(KEY_WOMAN,JSON.stringify(womanData))
 }
 
-// 查看月份状态：'' = 本月，格式 "2026-09"
-let viewMonth = {man:"", woman:""}
+// 全局查看月份（三页联动）：'' = 本月，格式 "2026-09"
+let viewMonth = ""
 
 // 本地日期（修复时区问题）
 function localToday(){
@@ -392,39 +395,48 @@ function localToday(){
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 
-function getYM(who){
-    if(viewMonth[who]){
-        const [y,m] = viewMonth[who].split('-').map(Number)
+function getYM(){
+    if(viewMonth){
+        const [y,m] = viewMonth.split('-').map(Number)
         return {y, m:m-1}
     }
     const now = new Date()
     return {y:now.getFullYear(), m:now.getMonth()}
 }
 
+// 切换全局月份（三个页面联动）
 function changeMonth(who,dir){
-    const {y,m} = getYM(who)
+    const {y,m} = getYM()
     let ny=y, nm=m+dir
     if(nm<0){ny--;nm=11}
     if(nm>11){ny++;nm=0}
-    viewMonth[who] = `${ny}-${String(nm+1).padStart(2,'0')}`
-    syncDateInput(who)
+    viewMonth = `${ny}-${String(nm+1).padStart(2,'0')}`
+    syncAllDateInputs()
     refreshAll()
 }
 
+// 回到本月（三个页面联动）
 function goThisMonth(who){
-    viewMonth[who] = ""
-    syncDateInput(who)
+    viewMonth = ""
+    syncAllDateInputs()
     refreshAll()
+}
+
+// 同步全部日期输入框
+function syncAllDateInputs(){
+    syncDateInput("man")
+    syncDateInput("woman")
+    syncDateInput("cash")
 }
 
 // 日期输入框跟随所选月份（保持日号，天数不足取月末）
 function syncDateInput(who){
-    const dateId = who=="man" ? "m1-date" : "m2-date"
+    const dateId = who=="man" ? "m1-date" : (who=="woman" ? "m2-date" : "cash-date")
     const input = document.getElementById(dateId)
     if(!input) return
     const curVal = input.value || localToday()
     const curDay = parseInt(curVal.slice(8,10), 10) || 1
-    const {y,m} = getYM(who)
+    const {y,m} = getYM()
     const daysInMonth = new Date(y, m+1, 0).getDate()
     const day = Math.min(curDay, daysInMonth)
     input.value = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
@@ -432,7 +444,7 @@ function syncDateInput(who){
 
 // 清空单人当前查看月份的数据
 function clearMonthData(who){
-    const {y,m} = getYM(who)
+    const {y,m} = getYM()
     const monthKey = `${y}-${String(m+1).padStart(2,'0')}`
     if(!confirm(`确定清空 ${y}年${m+1}月 的所有记录？`))return
     if(who=="man"){
@@ -448,7 +460,7 @@ function clearMonthData(who){
 // 绘制月历
 function renderCalendar(who,wrapId,data){
     const wrap = document.getElementById(wrapId)
-    const {y:year, m:month} = getYM(who)
+    const {y:year, m:month} = getYM()
     const firstDay = new Date(year,month,1)
     const lastDay = new Date(year,month+1,0)
 
@@ -492,7 +504,7 @@ function refreshWinLoss(){
 }
 
 function calcSingle(who,list,prefix){
-    const {y,m} = getYM(who)
+    const {y,m} = getYM()
     const monthStr = `${y}-${String(m+1).padStart(2,'0')}`
     const monthList = list.filter(x=>x.date.startsWith(monthStr))
     let winTotal = 0, loseTotal = 0
@@ -534,24 +546,6 @@ function delRecord(who,id){
 }
 
 // =========存钱计划========
-let cashViewMonth = "" // 空=全部，格式"2026-07"
-
-function changeCashMonth(dir){
-    const now = new Date()
-    const curYear = now.getFullYear(), curMonth = now.getMonth()+1
-    let y, m
-    if(!cashViewMonth){
-        y=curYear; m=curMonth
-    }else{
-        [y,m] = cashViewMonth.split('-').map(Number)
-    }
-    m += dir
-    if(m<1){y--;m=12}
-    if(m>12){y++;m=1}
-    cashViewMonth = `${y}-${String(m).padStart(2,'0')}`
-    refreshCash()
-}
-
 function addCashBill(){
     const date = document.getElementById("cash-date").value
     const cate = document.getElementById("cash-cate").value
@@ -566,21 +560,19 @@ function addCashBill(){
 }
 
 function refreshCash(){
-    // 筛选数据
-    let filtered = cashData
-    if(cashViewMonth){
-        filtered = cashData.filter(d=>d.date.startsWith(cashViewMonth))
-    }
-    
-    // 月份标签
-    if(cashViewMonth){
-        const [y,m] = cashViewMonth.split('-')
-        document.getElementById("cash-month-label").textContent = `${y}年${parseInt(m)}月`
-    }else{
-        document.getElementById("cash-month-label").textContent = "全部记录"
-    }
+    // 全局联动月份过滤
+    const {y,m} = getYM()
+    const monthKey = `${y}-${String(m+1).padStart(2,'0')}`
+    const filtered = cashData.filter(d=>d.date.startsWith(monthKey))
 
-    // 计算汇总
+    // 月份标签与标题
+    const now = new Date()
+    const isThisMonth = y===now.getFullYear() && m===now.getMonth()
+    const labelTxt = isThisMonth ? `${y}年${m+1}月(本月)` : `${y}年${m+1}月`
+    document.getElementById("cash-month-label").textContent = labelTxt
+    document.getElementById("cash-sum-title").textContent = `${y}年${m+1}月汇总`
+
+    // 当月汇总
     let manSave=0, manTake=0, womanSave=0, womanTake=0
     filtered.forEach(d=>{
         if(d.cate=="🙋🏻‍♂️存") manSave += d.money
@@ -599,6 +591,16 @@ function refreshCash(){
     document.getElementById("cash-womantake").textContent = womanTake.toFixed(2)
     document.getElementById("cash-womannet").textContent = womanNet.toFixed(2)
     document.getElementById("cash-total").textContent = totalNet.toFixed(2)
+
+    // 历史累计净存（全部记录）
+    let aMS=0,aMT=0,aWS=0,aWT=0
+    cashData.forEach(d=>{
+        if(d.cate=="🙋🏻‍♂️存") aMS += d.money
+        else if(d.cate=="🙋🏻‍♂️取") aMT += d.money
+        else if(d.cate=="🙋🏼‍♀️存") aWS += d.money
+        else if(d.cate=="🙋🏼‍♀️取") aWT += d.money
+    })
+    document.getElementById("cash-alltotal").textContent = (aMS-aMT+aWS-aWT).toFixed(2)
 
     // 明细列表
     let html=""
